@@ -22,6 +22,13 @@ const UserDashboard = () => {
     Completed: [],
   });
 
+  // Filter state - all categories visible by default
+  const [visibleCategories, setVisibleCategories] = useState({
+    "To Do": true,
+    "In Progress": true,
+    Completed: true,
+  });
+
   const [notes, setNotes] = useState(localStorage.getItem("notes") || "");
   const audioRef = useRef(new Audio(notificationSound));
 
@@ -93,18 +100,22 @@ const UserDashboard = () => {
     localStorage.setItem("tasks", JSON.stringify([...tasks["To Do"], ...tasks["In Progress"], ...tasks["Completed"]]));
   };
 
-  // Task Analytics Chart Data (Bar Graph)
+  // Task Analytics Chart Data (Bar Graph) - filtered by visible categories
+  const visibleCategoryKeys = Object.keys(tasks).filter(key => visibleCategories[key]);
   const chartData = {
-    labels: ["To Do", "In Progress", "Completed"],
+    labels: visibleCategoryKeys,
     datasets: [
       {
         label: "Number of Tasks",
-        data: [
-          tasks["To Do"].length,
-          tasks["In Progress"].length,
-          tasks.Completed.length,
-        ],
-        backgroundColor: ["#FF6384", "#FFCE56", "#36A2EB"],
+        data: visibleCategoryKeys.map(key => tasks[key].length),
+        backgroundColor: visibleCategoryKeys.map(key => {
+          const colors = {
+            "To Do": "#FF6384",
+            "In Progress": "#FFCE56",
+            "Completed": "#36A2EB"
+          };
+          return colors[key];
+        }),
       },
     ],
   };
@@ -141,20 +152,75 @@ const UserDashboard = () => {
         
         <ToastContainer position="top-right" autoClose={5000} hideProgressBar />
 
+        {/* Task Filter Controls */}
+        <div className="mb-6 p-4 bg-white rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-700 mb-3">Filter Tasks by Status:</h3>
+          <div className="flex flex-wrap gap-4 mb-4">
+            {Object.keys(tasks).map((category) => (
+              <label key={category} className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={visibleCategories[category]}
+                  onChange={(e) => {
+                    setVisibleCategories({
+                      ...visibleCategories,
+                      [category]: e.target.checked,
+                    });
+                  }}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <span className="ml-2 text-gray-700 font-medium">
+                  {category} ({tasks[category].length})
+                </span>
+              </label>
+            ))}
+          </div>
+          
+          {/* Quick Filter Buttons */}
+          <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
+            <button
+              onClick={() => setVisibleCategories({ "To Do": true, "In Progress": true, "Completed": true })}
+              className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+            >
+              Show All
+            </button>
+            <button
+              onClick={() => setVisibleCategories({ "To Do": false, "In Progress": false, "Completed": true })}
+              className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition"
+            >
+              Show Completed Only
+            </button>
+            <button
+              onClick={() => setVisibleCategories({ "To Do": true, "In Progress": true, "Completed": false })}
+              className="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
+            >
+              Show Incomplete Only
+            </button>
+          </div>
+        </div>
+
         {/* Kanban Board */}
         <div className="glassmorphism p-4 rounded-xl shadow-lg bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-lg border border-white/20">
           <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.keys(tasks).map((columnKey) => (
-                <Column key={columnKey} title={columnKey} id={columnKey} className="w-[280px]">
-                  <SortableContext items={tasks[columnKey].map((task) => task.id)} strategy={verticalListSortingStrategy}>
-                    {tasks[columnKey].map((task) => (
-                      <SortableItem key={task.id} id={task.id} task={task} />
-                    ))}
-                  </SortableContext>
-                </Column>
-              ))}
+              {Object.keys(tasks)
+                .filter((columnKey) => visibleCategories[columnKey])
+                .map((columnKey) => (
+                  <Column key={columnKey} title={columnKey} id={columnKey} className="w-[280px]">
+                    <SortableContext items={tasks[columnKey].map((task) => task.id)} strategy={verticalListSortingStrategy}>
+                      {tasks[columnKey].map((task) => (
+                        <SortableItem key={task.id} id={task.id} task={task} />
+                      ))}
+                    </SortableContext>
+                  </Column>
+                ))}
             </div>
+            {/* Show message when no columns are visible */}
+            {Object.values(visibleCategories).every((visible) => !visible) && (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-lg">No task categories selected. Please select at least one category to view tasks.</p>
+              </div>
+            )}
           </DndContext>
         </div>
 
