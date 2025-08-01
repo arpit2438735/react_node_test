@@ -5,10 +5,13 @@ import { FaUserCircle, FaTasks } from "react-icons/fa";
 import TaskList from "../tasks/TaskList";
 
 const Navbar = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const hideProfileRoutes = ["/", "/login", "/signup"];
+  
+  // Check if user is authenticated
+  const isAuthenticated = !!user || !!localStorage.getItem("token");
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [taskListOpen, setTaskListOpen] = useState(false);
@@ -63,43 +66,55 @@ const Navbar = () => {
     }
   };
 
-  const handleLogoClick = (e) => {
-    e.preventDefault();
+  const handleLogoClick = () => {
+    // If not authenticated, go to login page
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    
+    const isAdminPortal = location.pathname.startsWith("/admin");
 
-    setTimeout(() => {
-      const isAdminPortal = location.pathname.startsWith("/admin");
-
-      if (isAdminPortal) {
-        if (location.pathname === "/admin/dashboard") {
-          window.location.reload(); // Refresh if already on admin dashboard
-        } else {
-          navigate("/admin/dashboard"); // Redirect to admin dashboard
-        }
+    if (isAdminPortal) {
+      if (location.pathname === "/admin/dashboard") {
+        window.location.reload(); // Refresh if already on admin dashboard
       } else {
-        if (location.pathname === "/user/dashboard") {
-          window.location.reload(); // Refresh if already on user dashboard
-        } else {
-          navigate("/user/dashboard"); // Redirect to user dashboard
-        }
+        navigate("/admin/dashboard"); // Redirect to admin dashboard
       }
-    }, 500);
+    } else {
+      if (location.pathname === "/user/dashboard") {
+        window.location.reload(); // Refresh if already on user dashboard
+      } else {
+        navigate("/user/dashboard"); // Redirect to user dashboard
+      }
+    }
   };
 
   return (
     <nav className="bg-blue-600 text-white px-5 py-4 flex justify-between items-center shadow-lg">
       {/* Logo with Image & Text */}
-      <Link
-        to="/"
+      <div
         onClick={handleLogoClick}
-        className="flex items-center text-3xl font-bold tracking-wide hover:opacity-70 transition"
+        className="flex items-center text-3xl font-bold tracking-wide hover:opacity-70 transition cursor-pointer"
       >
         <img src="/app_icon.png" alt="TaskFlow Logo" className="w-12 h-12 rounded-full mr-2" />
         TaskFlow
-      </Link>
+      </div>
 
       <div className="flex items-center gap-4">
-        {/* Task List Button (Hidden on Landing/Login/Signup) */}
-        {!hideProfileRoutes.includes(location.pathname) && (
+        {/* Show Login button if not authenticated and not on login/signup pages */}
+        {!isAuthenticated && !hideProfileRoutes.includes(location.pathname) && (
+          <Link
+            to="/login"
+            className="bg-white text-blue-600 font-medium px-4 py-2 rounded-lg shadow-md 
+                       hover:bg-blue-700 hover:text-white transition-all"
+          >
+            Login
+          </Link>
+        )}
+        
+        {/* Task List Button (Hidden on Landing/Login/Signup and when not authenticated) */}
+        {!hideProfileRoutes.includes(location.pathname) && isAuthenticated && (
           <div className="relative" ref={taskListRef}>
             <button
               onClick={() => setTaskListOpen(!taskListOpen)}
@@ -119,8 +134,8 @@ const Navbar = () => {
           </div>
         )}
 
-        {/* Profile Button (Hidden on Landing/Login/Signup) */}
-        {!hideProfileRoutes.includes(location.pathname) && (
+        {/* Profile Button (Hidden on Landing/Login/Signup and when not authenticated) */}
+        {!hideProfileRoutes.includes(location.pathname) && isAuthenticated && (
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}

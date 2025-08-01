@@ -107,6 +107,9 @@ function App() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 
+                {/* Public Dashboard - accessible without login */}
+                <Route path="/user/dashboard" element={<UserDashboard />} />
+                
                 {/* Protected Admin Routes */}
                 <Route 
                   path="/admin/dashboard" 
@@ -165,15 +168,7 @@ function App() {
                   } 
                 />
                 
-                {/* Protected User Routes */}
-                <Route 
-                  path="/user/dashboard" 
-                  element={
-                    <ProtectedRoute>
-                      <UserDashboard />
-                    </ProtectedRoute>
-                  } 
-                />
+                {/* Protected User Routes - All except dashboard require authentication */}
                 <Route 
                   path="/user/userpage" 
                   element={

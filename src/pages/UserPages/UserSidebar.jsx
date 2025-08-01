@@ -1,18 +1,28 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FaChartBar, FaTasks, FaCalendarAlt, FaBell, FaUser } from "react-icons/fa";
+import { useAuth } from "../../contexts/AuthContext";
 
 const UserSidebar = () => {
   const location = useLocation();
+  const { user } = useAuth();
+  
+  // Check if user is authenticated
+  const isAuthenticated = !!user || !!localStorage.getItem("token");
 
-  // Sidebar links with icons
-  const menuItems = [
-    { path: "/user/dashboard", label: "Dashboard", icon: <FaChartBar /> },
-    { path: "/user/userpage", label: "Create Tasks", icon: <FaTasks /> },
-    { path: "/user/calendar", label: "Calendar", icon: <FaCalendarAlt /> },
-    { path: "/user/notifications", label: "Notifications", icon: <FaBell /> },
-    { path: "/user/profile", label: "Profile", icon: <FaUser /> },
+  // Sidebar links with icons - show only Dashboard if not authenticated
+  const allMenuItems = [
+    { path: "/user/dashboard", label: "Dashboard", icon: <FaChartBar />, public: true },
+    { path: "/user/userpage", label: "Create Tasks", icon: <FaTasks />, public: false },
+    { path: "/user/calendar", label: "Calendar", icon: <FaCalendarAlt />, public: false },
+    { path: "/user/notifications", label: "Notifications", icon: <FaBell />, public: false },
+    { path: "/user/profile", label: "Profile", icon: <FaUser />, public: false },
   ];
+  
+  // Filter menu items based on authentication status
+  const menuItems = isAuthenticated 
+    ? allMenuItems 
+    : allMenuItems.filter(item => item.public);
 
   return (
     <div className="w-64 min-h-screen p-6 bg-gray-900 text-white glassmorphism border-r border-gray-700">

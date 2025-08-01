@@ -5,12 +5,17 @@ import { Bar } from "react-chartjs-2";
 import "chart.js/auto";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import UserSidebar from "./UserSidebar";
 import Column from "./Column";
 import SortableItem from "./SortableItem";
 import notificationSound from "./notification.mp3";
 
 const UserDashboard = () => {
+  const { user } = useAuth();
+  const isAuthenticated = !!user || !!localStorage.getItem("token");
+  
   const [tasks, setTasks] = useState({
     "To Do": [],
     "In Progress": [],
@@ -112,6 +117,28 @@ const UserDashboard = () => {
         <h2 className="text-4xl font-bold text-gray-900 mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
           🚀 User Dashboard
         </h2>
+        
+        {/* Login Suggestion Message for Unauthenticated Users */}
+        {!isAuthenticated && (
+          <div className="bg-blue-50 border-l-4 border-blue-400 text-blue-700 p-4 mb-6 rounded-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium">
+                  You're viewing this dashboard as a guest. 
+                  <Link to="/login" className="ml-2 underline font-semibold hover:text-blue-800">
+                    Login
+                  </Link> to access all features and save your tasks!
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <ToastContainer position="top-right" autoClose={5000} hideProgressBar />
 
         {/* Kanban Board */}
