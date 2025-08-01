@@ -109,9 +109,50 @@ const AuthProvider = ({ children }) => {
 
   /**
    * Handles user logout
-   * Clears authentication data and resets state
+   * Clears authentication data, updates logs with logout time, and resets state
    */
   const handleLogout = () => {
+    // Get current user info before clearing
+    const userEmail = localStorage.getItem("email");
+    const userId = localStorage.getItem("userId");
+    const userRole = localStorage.getItem("userRole");
+    const token = localStorage.getItem("token");
+    
+    // Update user logs with logout time
+    if (userEmail && userId) {
+      const userLogs = JSON.parse(localStorage.getItem('userLogs') || '[]');
+      
+      // Find the most recent login log for this user without a logout time
+      const logIndex = userLogs.findIndex(log => 
+        log.userId === userId && 
+        log.username === userEmail && 
+        !log.logoutTime
+      );
+      
+      if (logIndex !== -1) {
+        // Update the log with logout time
+        userLogs[logIndex].logoutTime = new Date().toISOString();
+        localStorage.setItem('userLogs', JSON.stringify(userLogs));
+        console.log("Updated user log with logout time:", userLogs[logIndex]);
+      } else {
+        // If no matching log found, create a new log entry with logout time
+        const logData = {
+          id: `log-${Date.now()}`,
+          userId: userId,
+          username: userEmail,
+          role: userRole,
+          action: "logout",
+          loginTime: new Date(Date.now() - 3600000).toISOString(), // Assume 1 hour session
+          logoutTime: new Date().toISOString(),
+          ipAddress: "127.0.0.1",
+          tokenName: token ? token.substring(0, 10) + "..." : "Unknown"
+        };
+        userLogs.push(logData);
+        localStorage.setItem('userLogs', JSON.stringify(userLogs));
+        console.log("Created logout log:", logData);
+      }
+    }
+    
     // Clear all auth-related data from localStorage
     localStorage.removeItem("token");
     localStorage.removeItem("userRole");

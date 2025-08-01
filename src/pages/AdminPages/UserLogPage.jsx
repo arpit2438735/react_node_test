@@ -18,6 +18,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FaTrash, FaSpinner, FaExclamationTriangle, FaUserShield, FaSort, FaFilter } from 'react-icons/fa';
+import Sidebar from '../../components/admin/Sidebar';
 
 const UserLogPage = () => {
   // State management with proper initialization
@@ -244,12 +245,32 @@ const UserLogPage = () => {
     setDeleteConfirm(null);
   };
 
+  /**
+   * Clear all logs
+   */
+  const handleClearAllLogs = () => {
+    if (window.confirm('Are you sure you want to delete all user logs? This action cannot be undone.')) {
+      // Clear logs from state
+      setLogs([]);
+      setFilteredLogs([]);
+      
+      // Clear logs from localStorage
+      localStorage.setItem('userLogs', JSON.stringify([]));
+      
+      // Reset confirmation state
+      setDeleteConfirm(null);
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
-      <div className="p-6 flex justify-center items-center" aria-live="polite" role="status">
-        <FaSpinner className="animate-spin text-blue-500 text-2xl" aria-hidden="true" />
-        <span className="ml-2">Loading user logs...</span>
+      <div className="flex min-h-screen bg-gray-100">
+        <Sidebar />
+        <div className="flex-1 p-6 flex justify-center items-center" aria-live="polite" role="status">
+          <FaSpinner className="animate-spin text-blue-500 text-2xl" aria-hidden="true" />
+          <span className="ml-2">Loading user logs...</span>
+        </div>
       </div>
     );
   }
@@ -257,19 +278,36 @@ const UserLogPage = () => {
   // Error state
   if (error) {
     return (
-      <div className="p-6 text-red-500 flex items-center" aria-live="assertive" role="alert">
-        <FaExclamationTriangle className="mr-2" aria-hidden="true" />
-        <span>{error}</span>
+      <div className="flex min-h-screen bg-gray-100">
+        <Sidebar />
+        <div className="flex-1 p-6 text-red-500 flex items-center" aria-live="assertive" role="alert">
+          <FaExclamationTriangle className="mr-2" aria-hidden="true" />
+          <span>{error}</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center">
-        <FaUserShield className="mr-2" aria-hidden="true" />
-        User Activity Logs
-      </h2>
+    <div className="flex min-h-screen bg-gray-100">
+      <Sidebar />
+      <div className="flex-1 p-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+          <FaUserShield className="mr-2" aria-hidden="true" />
+          User Activity Logs
+        </h2>
+        {logs.length > 0 && (
+          <button
+            onClick={handleClearAllLogs}
+            className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            aria-label="Clear all user logs"
+          >
+            Clear All Logs
+          </button>
+        )}
+      </div>
       
       <div className="mb-6 space-y-4 md:space-y-0 md:flex md:space-x-4">
         {/* Search input */}
@@ -445,6 +483,8 @@ const UserLogPage = () => {
             )}
           </tbody>
         </table>
+      </div>
+    </div>
       </div>
     </div>
   );

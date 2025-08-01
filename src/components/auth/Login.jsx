@@ -93,11 +93,13 @@ const Login = () => {
         
         // Create log entry for admin tracking
         const logData = {
+          id: `log-${Date.now()}`,
           userId: user.userId,
           username: email,
           role: user.role,
           action: "login",
           loginTime: new Date().toISOString(),
+          logoutTime: null,
           ipAddress: "127.0.0.1", // In production, this would be captured from the request
           tokenName: mockToken.substring(0, 10) + "..." // Truncated for security
         };
